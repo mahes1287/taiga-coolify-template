@@ -1,7 +1,3 @@
-# documentation: https://taiga.io/docs/
-# slogan: Taiga is an open-source project management tool for agile developers & designers.
-# tags: taiga, project management, open source, agile, scrum, kanban
-
 services:
   taiga-frontend:
     image: "taigaio/taiga-front:${project.SOFTWARE_VERSION_TAG}"
