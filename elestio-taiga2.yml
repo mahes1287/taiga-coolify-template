@@ -1,14 +1,14 @@
 services:
   taiga-frontend:
-    image: "taigaio/taiga-front:${project.SOFTWARE_VERSION_TAG}"
+    image: "taigaio/taiga-front:${SOFTWARE_VERSION_TAG}"
     volumes:
       - taiga-assets:/opt/data/assets
     depends_on:
       - taiga-backend
       - taiga-events
     environment:
-      - TAIGA_URL=${project.BASE_URL}
-      - TAIGA_WEBSOCKETS_URL=wss://${project.DOMAIN}
+      - TAIGA_URL=${BASE_URL}
+      - TAIGA_WEBSOCKETS_URL=wss://${DOMAIN}
       - TAIGA_SUBPATH=""
       - PUBLIC_REGISTER_ENABLED=true
     healthcheck:
@@ -18,7 +18,7 @@ services:
       retries: 15
 
   taiga-backend:
-    image: "taigaio/taiga-back:${project.SOFTWARE_VERSION_TAG}"
+    image: "taigaio/taiga-back:${SOFTWARE_VERSION_TAG}"
     volumes:
       - taiga-assets:/opt/data/assets
     depends_on:
@@ -27,19 +27,19 @@ services:
     environment:
       - POSTGRES_DB=taiga
       - POSTGRES_USER=taiga
-      - POSTGRES_PASSWORD=${project.APP_PASSWORD}
+      - POSTGRES_PASSWORD=${APP_PASSWORD}
       - POSTGRES_HOST=taiga-db
-      - TAIGA_SECRET_KEY=${project.APP_PASSWORD}
+      - TAIGA_SECRET_KEY=${APP_PASSWORD}
       - TAIGA_SITES_SCHEME=https
-      - TAIGA_SITES_DOMAIN=${project.DOMAIN}
+      - TAIGA_SITES_DOMAIN=${DOMAIN}
       - EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
-      - DEFAULT_FROM_EMAIL=${project.SMTP_FROM_EMAIL}
+      - DEFAULT_FROM_EMAIL=${SMTP_FROM_EMAIL}
       - EMAIL_USE_TLS=false
       - EMAIL_USE_SSL=false
-      - EMAIL_HOST=${project.SMTP_HOST}
-      - EMAIL_PORT=${project.SMTP_PORT}
+      - EMAIL_HOST=${SMTP_HOST}
+      - EMAIL_PORT=${SMTP_PORT}
       - RABBITMQ_USER=taiga
-      - RABBITMQ_PASS=${project.APP_PASSWORD}
+      - RABBITMQ_PASS=${APP_PASSWORD}
       - PUBLIC_REGISTER_ENABLED=true
       - ENABLE_TELEMETRY=true
       - TAIGA_TELEMETRY_REFERER=elest.io
@@ -50,7 +50,7 @@ services:
       retries: 15
 
   taiga-async:
-    image: "taigaio/taiga-back:${project.SOFTWARE_VERSION_TAG}"
+    image: "taigaio/taiga-back:${SOFTWARE_VERSION_TAG}"
     entrypoint: ["/taiga-back/docker/async_entrypoint.sh"]
     volumes:
       - taiga-assets:/opt/data/assets
@@ -60,31 +60,31 @@ services:
     environment:
       - POSTGRES_DB=taiga
       - POSTGRES_USER=taiga
-      - POSTGRES_PASSWORD=${project.APP_PASSWORD}
+      - POSTGRES_PASSWORD=${APP_PASSWORD}
       - POSTGRES_HOST=taiga-db
-      - TAIGA_SECRET_KEY=${project.APP_PASSWORD}
+      - TAIGA_SECRET_KEY=${APP_PASSWORD}
       - TAIGA_SITES_SCHEME=https
-      - TAIGA_SITES_DOMAIN=${project.DOMAIN}
+      - TAIGA_SITES_DOMAIN=${DOMAIN}
       - EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
-      - DEFAULT_FROM_EMAIL=${project.SMTP_FROM_EMAIL}
+      - DEFAULT_FROM_EMAIL=${SMTP_FROM_EMAIL}
       - EMAIL_USE_TLS=false
       - EMAIL_USE_SSL=false
-      - EMAIL_HOST=${project.SMTP_HOST}
-      - EMAIL_PORT=${project.SMTP_PORT}
+      - EMAIL_HOST=${SMTP_HOST}
+      - EMAIL_PORT=${SMTP_PORT}
       - RABBITMQ_USER=taiga
-      - RABBITMQ_PASS=${project.APP_PASSWORD}
+      - RABBITMQ_PASS=${APP_PASSWORD}
       - PUBLIC_REGISTER_ENABLED=true
       - ENABLE_TELEMETRY=true
       - TAIGA_TELEMETRY_REFERER=elest.io
 
   taiga-events:
-    image: "taigaio/taiga-events:${project.SOFTWARE_VERSION_TAG}"
+    image: "taigaio/taiga-events:${SOFTWARE_VERSION_TAG}"
     depends_on:
       - taiga-events-rabbitmq
     environment:
       - RABBITMQ_USER=taiga
-      - RABBITMQ_PASS=${project.APP_PASSWORD}
-      - TAIGA_SECRET_KEY=${project.APP_PASSWORD}
+      - RABBITMQ_PASS=${APP_PASSWORD}
+      - TAIGA_SECRET_KEY=${APP_PASSWORD}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://127.0.0.1:8888"]
       interval: 2s
@@ -98,7 +98,7 @@ services:
     environment:
       - POSTGRES_DB=taiga
       - POSTGRES_USER=taiga
-      - POSTGRES_PASSWORD=${project.APP_PASSWORD}
+      - POSTGRES_PASSWORD=${APP_PASSWORD}
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
@@ -112,7 +112,7 @@ services:
     environment:
       - RABBITMQ_ERLANG_COOKIE=secret-erlang-cookie
       - RABBITMQ_DEFAULT_USER=taiga
-      - RABBITMQ_DEFAULT_PASS=${project.APP_PASSWORD}
+      - RABBITMQ_DEFAULT_PASS=${APP_PASSWORD}
       - RABBITMQ_DEFAULT_VHOST=taiga
     healthcheck:
       test: ["CMD", "rabbitmqctl", "status"]
@@ -127,7 +127,7 @@ services:
     environment:
       - RABBITMQ_ERLANG_COOKIE=secret-erlang-cookie
       - RABBITMQ_DEFAULT_USER=taiga
-      - RABBITMQ_DEFAULT_PASS=${project.APP_PASSWORD}
+      - RABBITMQ_DEFAULT_PASS=${APP_PASSWORD}
       - RABBITMQ_DEFAULT_VHOST=taiga
     healthcheck:
       test: ["CMD", "rabbitmqctl", "status"]
@@ -136,10 +136,10 @@ services:
       retries: 10
 
   taiga-protected:
-    image: "taigaio/taiga-protected:${project.SOFTWARE_VERSION_TAG}"
+    image: "taigaio/taiga-protected:${SOFTWARE_VERSION_TAG}"
     environment:
       - MAX_AGE=360
-      - SECRET_KEY=${project.APP_PASSWORD}
+      - SECRET_KEY=${APP_PASSWORD}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://127.0.0.1:9000"]
       interval: 2s
