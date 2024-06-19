@@ -1,0 +1,87 @@
+# documentation: https://help.penpot.app/technical-guide/getting-started/#install-with-docker
+# slogan: Penpot is the first Open Source design and prototyping platform for product teams.
+# tags: penpot,design,prototyping,figma,open,source
+
+services:
+  frontend:
+    image: "taigaio/taiga-front:latest"
+    volumes:
+      - taiga-assets:/opt/data/assets
+    depends_on:
+      - taiga-backend
+      - taiga-exporter
+    environment:
+      - SERVICE_FQDN_FRONTEND
+      - TAIGA_FLAGS=${TAIGA_FRONTEND_FLAGS:-enable-login-with-password}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:80"]
+      interval: 2s
+      timeout: 10s
+      retries: 15
+  taiga-backend:
+    image: taigaio/taiga-back:latest
+    volumes:
+      - taiga-assets:/opt/data/assets
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      - TAIGA_FLAGS=${TAIGA_BACKEND_FLAGS:-enable-login-with-password enable-smtp enable-prepl-server}
+      - TAIGA_HTTP_SERVER_PORT=6060
+      - TAIGA_SECRET_KEY=$SERVICE_REALBASE64_64_TAIGA
+      - TAIGA_PUBLIC_URI=$SERVICE_FQDN_FRONTEND
+      - TAIGA_BACKEND_URI=http://penpot-backend
+      - TAIGA_EXPORTER_URI=http://penpot-exporter
+      - TAIGA_DATABASE_URI=postgresql://postgres/${POSTGRES_DB:-penpot}
+      - TAIGA_DATABASE_USERNAME=${SERVICE_USER_POSTGRES}
+      - TAIGA_DATABASE_PASSWORD=${SERVICE_PASSWORD_POSTGRES}
+      - TAIGA_REDIS_URI=redis://redis/0
+      - TAIGA_ASSETS_STORAGE_BACKEND=assets-fs
+      - TAIGA_STORAGE_ASSETS_FS_DIRECTORY=/opt/data/assets
+      - TAIGA_TELEMETRY_ENABLED=${TAIGA_TELEMETRY_ENABLED:-false}
+      - TAIGA_SMTP_DEFAULT_FROM=${TAIGA_SMTP_DEFAULT_FROM:-no-reply@example.com}
+      - TAIGA_SMTP_DEFAULT_REPLY_TO=${TAIGA_SMTP_DEFAULT_REPLY_TO:-no-reply@example.com}
+      - TAIGA_SMTP_HOST=${TAIGA_SMTP_HOST:-mailpit}
+      - TAIGA_SMTP_PORT=${TAIGA_SMTP_PORT:-1025}
+      - TAIGA_SMTP_USERNAME=${TAIGA_SMTP_USERNAME:-penpot}
+      - TAIGA_SMTP_PASSWORD=${TAIGA_SMTP_PASSWORD:-penpot}
+      - TAIGA_SMTP_TLS=${TAIGA_SMTP_TLS:-false}
+      - TAIGA_SMTP_SSL=${TAIGA_SMTP_SSL:-false}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:6060"]
+      interval: 2s
+      timeout: 10s
+      retries: 15
+  penpot-exporter:
+    image: penpotapp/exporter:latest
+    environment:
+      - PENPOT_PUBLIC_URI=$SERVICE_FQDN_FRONTEND
+      - PENPOT_REDIS_URI=redis://redis/0
+  mailpit:
+    image: "axllent/mailpit:latest"
+    environment:
+      - SERVICE_FQDN_MAILPIT_8025
+  postgres:
+    image: postgres:15
+    volumes:
+      - penpot-postgresql-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_INITDB_ARGS=--data-checksums
+      - POSTGRES_USER=$SERVICE_USER_POSTGRES
+      - POSTGRES_PASSWORD=$SERVICE_PASSWORD_POSTGRES
+      - POSTGRES_DB=${POSTGRES_DB:-penpot}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 20s
+      retries: 10
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - penpot-redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 20s
+      retries: 10
